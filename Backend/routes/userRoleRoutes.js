@@ -13,7 +13,7 @@ const checkPermission = require("../middleware/checkPermission");
 
 router.get('/', authMiddleware, checkPermission, getRoles);
 router.post('/add', addRole);
-router.put('/edit/:id', authMiddleware, checkPermission, updateRole);
+router.put('/edit/:id', updateRole);
 router.delete('/delete/:id', authMiddleware, checkPermission, deleteRole);
 
 module.exports = router;
