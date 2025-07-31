@@ -14,11 +14,13 @@
 const express = require('express');
 const router = express.Router();
 const invoiceController = require('../controllers/invoiceController');
+const authMiddleware = require('../middleware/authMiddleware');
+const checkPermission = require("../middleware/checkPermission");
 
-router.post('/add', invoiceController.addInvoice);
-router.get('/', invoiceController.getInvoices);
-router.get('/:id', invoiceController.getInvoiceById);
-router.put('/edit/:id', invoiceController.updateInvoice);
-router.delete('/delete/:id', invoiceController.deleteInvoice);
+router.post('/add',authMiddleware,checkPermission , invoiceController.addInvoice);
+router.get('/',authMiddleware,checkPermission , invoiceController.getInvoices);
+router.get('/:id',authMiddleware,checkPermission , invoiceController.getInvoiceById);
+router.put('/edit/:id',authMiddleware,checkPermission , invoiceController.updateInvoice);
+router.delete('/delete/:id',authMiddleware,checkPermission , invoiceController.deleteInvoice);
 
 module.exports = router;
