@@ -11,7 +11,7 @@ const {
   deleteInventory
 } = require("../controllers/inventoryController");
 
-// Route to add or update inventory
+// // Route to add or update inventory
 router.post("/addupdate",authMiddleware,checkPermission , addOrUpdateInventory);
 
 // Route to create inventory only if not exists

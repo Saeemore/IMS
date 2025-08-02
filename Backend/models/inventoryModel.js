@@ -15,8 +15,8 @@ const inventorySchema = new mongoose.Schema({
     required: true
   },
 
-  sellingPrice: { type: Number, required: true },
-  discount: { type: Number, default: 0 }
-});
+  // sellingPrice: { type: Number, required: true },
+  // discount: { type: Number, default: 0 }
+}, { timestamps: true });
 
 module.exports = mongoose.model("Inventory", inventorySchema);

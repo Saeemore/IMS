@@ -94,6 +94,57 @@
 const Invoice = require('../models/invoiceModel');
 const Product = require('../models/productModel');
 
+// exports.addInvoice = async (req, res) => {
+//   try {
+//     const {
+//       invoiceNumber,
+//       customerName,
+//       customerContact,
+//       items,
+//       tax = 0,
+//       discount = 0,
+//       paymentStatus = 'Pending'
+//     } = req.body;
+
+//     let subTotal = 0;
+
+//     for (const item of items) {
+//       item.totalPrice = item.quantity * item.unitPrice;
+//       subTotal += item.totalPrice;
+
+//       // Reduce product stock
+//       const product = await Product.findById(item.productId);
+//       if (!product) return res.status(404).json({ error: `Product ${item.productId} not found` });
+
+//       // Decrease product quantity
+//       await Product.findByIdAndUpdate(item.productId, {
+//         $inc: { quantity: -item.quantity }
+//       });
+//     }
+
+//     const grandTotal = subTotal + tax - discount;
+
+//     const newInvoice = new Invoice({
+//       invoiceNumber,
+//       customerName,
+//       customerContact,
+//       items,
+//       subTotal,
+//       tax,
+//       discount,
+//       grandTotal,
+//       paymentStatus
+//     });
+
+//     await newInvoice.save();
+
+//     res.status(201).json({ message: 'Invoice created successfully', invoice: newInvoice });
+
+//   } catch (err) {
+//     res.status(500).json({ error: err.message });
+//   }
+// };
+
 // Add Invoice
 exports.addInvoice = async (req, res) => {
   try {
@@ -102,38 +153,46 @@ exports.addInvoice = async (req, res) => {
       customerName,
       customerContact,
       items,
-      tax = 0,
-      discount = 0,
       paymentStatus = 'Pending'
     } = req.body;
 
+    const TAX_PERCENT = 18;
+    const DISCOUNT_PERCENT = 10;
+
     let subTotal = 0;
+    let grandTotal = 0;
 
     for (const item of items) {
-      item.totalPrice = item.quantity * item.unitPrice;
-      subTotal += item.totalPrice;
-
-      // Reduce product stock
       const product = await Product.findById(item.productId);
       if (!product) return res.status(404).json({ error: `Product ${item.productId} not found` });
 
-      // Decrease product quantity
+      const basePrice = item.quantity * item.unitPrice;
+      const tax = (TAX_PERCENT / 100) * basePrice;
+      const discount = (DISCOUNT_PERCENT / 100) * basePrice;
+      const totalPrice = basePrice + tax - discount;
+
+      item.totalPrice = totalPrice.toFixed(2); // store with decimals if needed
+      item.tax = tax.toFixed(2);
+      item.discount = discount.toFixed(2);
+
+      subTotal += basePrice;
+      grandTotal += totalPrice;
+
+      // Reduce product stock
       await Product.findByIdAndUpdate(item.productId, {
         $inc: { quantity: -item.quantity }
       });
     }
-
-    const grandTotal = subTotal + tax - discount;
 
     const newInvoice = new Invoice({
       invoiceNumber,
       customerName,
       customerContact,
       items,
-      subTotal,
-      tax,
-      discount,
-      grandTotal,
+      subTotal: subTotal.toFixed(2),
+      tax: (TAX_PERCENT).toFixed(2),
+      discount: (DISCOUNT_PERCENT).toFixed(2),
+      grandTotal: grandTotal.toFixed(2),
       paymentStatus
     });
 
