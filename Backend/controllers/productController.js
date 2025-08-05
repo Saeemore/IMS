@@ -56,8 +56,6 @@ exports.deleteProduct = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
-
-
 exports.searchProducts = async (req, res) => {
   const { q } = req.query;
 
@@ -75,4 +73,3 @@ exports.searchProducts = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
-    
