@@ -141,21 +141,51 @@ exports.deleteInvoice = async (req, res) => {
 
 
 
-// Search invoices by invoiceNumber or customerName
 exports.searchInvoices = async (req, res) => {
   try {
-    const { query } = req.query;
+    const { query, singleDate, startDate, endDate } = req.query;
+    const searchConditions = [];
 
-    if (!query) {
-      return res.status(400).json({ error: 'Query parameter is required' });
+    // Search by invoiceNumber or customerName
+    if (query) {
+      if (query.length < 3) {
+        return res.status(400).json({ error: "Query must be at least 3 characters long" });
+      }
+
+      searchConditions.push({
+        $or: [
+          { invoiceNumber: { $regex: query, $options: 'i' } },
+          { customerName: { $regex: query, $options: 'i' } }
+        ]
+      });
     }
 
-    const invoices = await Invoice.find({
-      $or: [
-        { invoiceNumber: { $regex: query, $options: 'i' } },
-        { customerName: { $regex: query, $options: 'i' } }
-      ]
-    }).populate('items.productId', 'name');
+    // Search by singleDate
+    if (singleDate) {
+      const start = new Date(singleDate);
+      const end = new Date(singleDate);
+      end.setDate(end.getDate() + 1);
+
+      searchConditions.push({
+        createdAt: { $gte: start, $lt: end }
+      });
+    }
+
+    // Search by startDate and endDate
+    if (startDate && endDate) {
+      searchConditions.push({
+        createdAt: {
+          $gte: new Date(startDate),
+          $lte: new Date(endDate)
+        }
+      });
+    }
+
+    if (searchConditions.length === 0) {
+      return res.status(400).json({ error: "At least one search filter (query, singleDate, or startDate+endDate) is required" });
+    }
+
+    const invoices = await Invoice.find({ $and: searchConditions }).populate('items.productId', 'name');
 
     res.status(200).json(invoices);
   } catch (err) {
